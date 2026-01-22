@@ -1,0 +1,4 @@
+name: pipisa
+version: '${project.version}'
+main: org.rebelland.pipisa.Pipisa
+api-version: '1.16'
