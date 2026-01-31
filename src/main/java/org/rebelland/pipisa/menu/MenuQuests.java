@@ -1,6 +1,5 @@
 package org.rebelland.pipisa.menu;
 
-import io.lumine.mythic.bukkit.utils.lib.jooq.impl.QOM;
 import model.TrackedMenu;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -12,120 +11,148 @@ import org.mineacademy.fo.menu.model.ItemCreator;
 import org.mineacademy.fo.remain.CompMaterial;
 import org.mineacademy.fo.remain.CompSound;
 import org.rebelland.pipisa.database.QuestDB;
+import org.rebelland.pipisa.command.lists.QuestList;
+import org.rebelland.pipisa.command.lists.SimpleQuests;
 
 import java.util.UUID;
 
-
 public class MenuQuests extends TrackedMenu {
 
-    private int amount;
+    /* ===== КЭШ МЕНЮ ===== */
+    private SimpleQuests activeQuest;
+    private QuestDB.QuestProgress cachedProgress;
+
     private Button questButton = Button.makeEmpty();
-    private String currentProgress;
-    private boolean completeded;
-    private String toAccept;
 
     public MenuQuests(UUID uuid) {
-        setTitle(Common.colorize("&a&lМеню Квеста"));
+
+        setTitle(Common.colorize("&a&lМеню Квестов"));
         setSize(9 * 3);
 
+        loadDataAsync(uuid);
+    }
+
+ private void loadDataAsync(UUID uuid) {
+
         Common.runAsync(() -> {
-            this.amount = QuestDB.getInstance().getQuestCountByUUID(uuid.toString());
+
+            activeQuest = null;
+            cachedProgress = null;
+
+            for (SimpleQuests quest : QuestList.QUESTS) {
+
+                QuestDB.QuestProgress progress =
+                        QuestDB.getInstance().getQuestProgress(uuid, quest.block);
+
+                if (progress == null || !progress.isCompleted()) {
+                    activeQuest = quest;
+                    cachedProgress = progress;
+                    break;
+                }
+            }
+
             Common.runLater(() -> {
-                if (completeded){
-                    amount+=1;
-                }
-                switch (amount) {
-                    case 0:
-                    case 1:
-                        registerQuestButton(
-                                uuid,
-                                CompMaterial.OAK_LOG,
-                                16,
-                                Common.colorize("&6&lНачало"),
-                                "&e&lДобудь 16 дуба.");
-                        break;
-                    case 2:
-                        registerQuestButton(
-                                uuid,
-                                CompMaterial.STONE,
-                                32,
-                                Common.colorize("&6&lПервые шаги"),
-                                "&e&lДобудь 32 камня.");
-                        break;
-                }
+                buildButton(uuid);
                 restartMenu();
             });
         });
     }
 
-    public void registerQuestButton(UUID uuid, CompMaterial block, int maxProgress, String nameItem, String loreItem) {
-        this.completeded = false;
-        if (amount == 0) {
-            toAccept = (Common.colorize("&4&lНАЖМИ ЧТО-БЫ ПРИНЯТЬ"));
-        } else {
-            toAccept = (Common.colorize("&4&lНАЖМИ ЧТО-БЫ ЗАВЕРШИТЬ"));
-        };
-        Common.runAsync(() -> {
-            try {
-                this.currentProgress = ("&2Текущий прогресс: &a" + QuestDB.getInstance().getQuestProgress(uuid, block).getProgress() + "/" + QuestDB.getInstance().getQuestProgress(uuid, block).getMaxProgress());
-            } catch (Exception e) {
-                this.currentProgress = "0/0";
+    private void buildButton(UUID uuid) {
+
+        if (activeQuest == null) {
+            questButton = new Button(13) {
+                @Override
+                public void onClickedInMenu(Player player, Menu menu, ClickType clickType) {
+
+                }
+
+                @Override
+                public ItemStack getItem() {
+                    return ItemCreator.of(CompMaterial.EMERALD_BLOCK)
+                            .name(Common.colorize("&aВсе квесты выполнены!"))
+                            .lore(Common.colorize("&7Возвращайся позже 😎"))
+                            .make();
+                }
+            };
+            return;
+        }
+
+        questButton = new Button(13) {
+
+            @Override
+            public void onClickedInMenu(Player player, Menu menu, ClickType clickType) {
+
+                Common.runAsync(() -> {
+
+                    // Принятие
+                    if (cachedProgress == null) {
+                        QuestDB.getInstance().createQuest(
+                                uuid,
+                                activeQuest.block,
+                                activeQuest.maxProgress
+                        );
+
+                        Common.runLater(() -> {
+                            CompSound.UI_BUTTON_CLICK.play(player);
+                            loadDataAsync(uuid);
+                        });
+                        return;
+                    }
+
+                    // Проверка
+                    if (!cachedProgress.isCompleted()) {
+                        CompSound.UI_BUTTON_CLICK.play(player);
+                        Common.runLater(() -> {
+                            player.sendMessage(Common.colorize("&eКвест ещё не выполнен"));
+                            CompSound.UI_BUTTON_CLICK.play(player);
+                        });
+                        return;
+                    }
+
+                    // Завершение
+                    Common.runLater(() -> {
+                        player.sendMessage(Common.colorize("&aКвест выполнен!"));
+                        CompSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player);
+                        loadDataAsync(uuid);
+                    });
+                });
             }
-            Common.runLater(() -> {
-                this.questButton = new Button(13) {
-                    @Override
-                    public void onClickedInMenu(Player player, Menu menu, ClickType clickType) {
-                        if (amount == 0) {
-                            Common.runAsync(()->{
-                                QuestDB.getInstance().createQuest(uuid, block, maxProgress);
-                                CompSound.UI_BUTTON_CLICK.play(player);
-                            });
-                            restartMenu();
-                        } else {
-                            Common.runAsync(() -> {
-                                boolean completed = QuestDB.getInstance().isQuestCompleted(uuid, block);
-                                if (completed) {
-                                    Common.runLater(() -> {
-                                        player.sendMessage(Common.colorize("&aКвест выполнен!"));
-                                        CompSound.ENTITY_EXPERIENCE_ORB_PICKUP.play(player);
-                                        MenuQuests.this.completeded = true;
-                                        restartMenu();
-                                    });
-                                } else {
-                                    Common.runLater(() -> {
-                                        player.sendMessage(Common.colorize("&4Еще не выполнен квест"));
-                                    });
-                                }
-                            });
-                        }
-                        restartMenu();
-                    }
 
-                    @Override
-                    public ItemStack getItem() {
-                        return ItemCreator.of(CompMaterial.GOLD_BLOCK)
-                                .name(nameItem)
-                                .lore(
-                                        loreItem,
-                                        Common.colorize(currentProgress),
-                                        (toAccept))
-                                .make();
-                    }
-                };
+            @Override
+            public ItemStack getItem() {
 
-                // Перезапускаем меню после создания кнопки
-                restartMenu();
+                String progressLine;
+                String actionLine;
 
-            });
-        });
+                if (cachedProgress == null) {
+                    progressLine = "&7Прогресс: 0/" + activeQuest.maxProgress;
+                    actionLine = "&a▶ Нажми, чтобы принять";
+                } else {
+                    progressLine = "&aПрогресс: " +
+                            cachedProgress.getProgress() + "/" +
+                            cachedProgress.getMaxProgress();
+
+                    actionLine = cachedProgress.isCompleted()
+                            ? "&6✔ Нажми, чтобы завершить"
+                            : "&e⏳ В процессе";
+                }
+
+                return ItemCreator.of(CompMaterial.GOLD_BLOCK)
+                        .name(Common.colorize(activeQuest.title))
+                        .lore(
+                                Common.colorize(activeQuest.description),
+                                Common.colorize(progressLine),
+                                Common.colorize(actionLine)
+                        )
+                        .make();
+            }
+        };
     }
 
     @Override
     public ItemStack getItemAt(int slot) {
-        if (slot == 13 && questButton != null) {
-            return questButton.getItem();
-        }
-        return NO_ITEM;
+        return slot == 13 ? questButton.getItem() : NO_ITEM;
     }
 
     @Override
