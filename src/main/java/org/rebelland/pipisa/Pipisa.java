@@ -8,6 +8,7 @@ import org.rebelland.pipisa.command.Menushka;
 import org.rebelland.pipisa.command.MyFirstCommand;
 import org.rebelland.pipisa.command.TreasuryCommands;
 import org.rebelland.pipisa.database.TreasuryRepository;
+import org.rebelland.pipisa.listener.PlayerBreakEvent;
 import org.rebelland.pipisa.listener.PlayerJoinEventListener;
 
 public final class Pipisa extends SimplePlugin {
@@ -19,7 +20,7 @@ public final class Pipisa extends SimplePlugin {
         registerCommand(new Menushka());
         TreasuryRepository.getInstance().initializeTables();
         registerEvents(new PlayerJoinEventListener());
-
+        registerEvents(new PlayerBreakEvent());
     }
 
     @Override
