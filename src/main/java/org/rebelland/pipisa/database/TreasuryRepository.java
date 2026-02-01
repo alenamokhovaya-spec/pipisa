@@ -123,6 +123,7 @@ public class TreasuryRepository {
             ps.setString(1, uuid.toString());
             ps.setString(2, name);
             ps.executeUpdate();
+
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
