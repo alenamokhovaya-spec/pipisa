@@ -8,6 +8,7 @@ import org.mineacademy.fo.Common;
 import org.mineacademy.fo.annotation.AutoRegister;
 import org.mineacademy.fo.event.SimpleListener;
 import org.mineacademy.fo.remain.CompMaterial;
+import org.rebelland.pipisa.api.QuestService;
 import org.rebelland.pipisa.database.QuestDB;
 
 import java.util.List;
@@ -30,17 +31,7 @@ public final class PlayerBreakEvent extends SimpleListener<BlockBreakEvent> {
 
         // Получаем список блоков для квестов игрока
         Common.runAsync(() -> {
-            List<CompMaterial> questBlocks = QuestDB.getInstance().getAllBlocksByUUID(player.getUniqueId());
-
-            // Проверяем, содержится ли сломанный блок в списке квестовых блоков
-            if (questBlocks.contains(blockMaterial)) {
-                // Обновляем прогресс квеста
-                QuestDB.getInstance().updateProgress(
-                        player.getUniqueId(),
-                        blockMaterial,
-                        QuestDB.getInstance().getQuestProgress(player.getUniqueId(), blockMaterial).getProgress() + 1
-                );
-            }
+            QuestService.getInstance().addProgress(event.getPlayer().getUniqueId(), blockMaterial, 1);
         });
     }
 }

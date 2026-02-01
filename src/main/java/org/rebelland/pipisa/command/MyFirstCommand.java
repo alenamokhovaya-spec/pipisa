@@ -16,5 +16,5 @@ public class MyFirstCommand extends SimpleCommand {
         // Реализация команды
         Player player = (Player) sender;
         player.sendTitle(Common.colorize("&d&lпук"), null, 1, 3, 1);
-        }
+    }
 }
