@@ -2,9 +2,7 @@ package org.rebelland.pipisa.listener;
 
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.annotation.AutoRegister;
@@ -15,10 +13,15 @@ import org.rebelland.pipisa.database.QuestDB;
 
 import java.util.List;
 
-public final class PlayerBreakEvent implements Listener {
+@AutoRegister
+public final class PlayerBreakEvent extends SimpleListener<BlockBreakEvent> {
 
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
+    public PlayerBreakEvent() {
+        super(BlockBreakEvent.class, EventPriority.HIGHEST, true);
+    }
+
+    @Override
+    protected void execute(BlockBreakEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlock();
         CompMaterial blockMaterial = CompMaterial.fromBlock(block);
