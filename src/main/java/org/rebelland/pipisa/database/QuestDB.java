@@ -1,7 +1,8 @@
 package org.rebelland.pipisa.database;
 
 import org.mineacademy.fo.remain.CompMaterial;
-import org.rebelland.pipisa.model.SimpleQuests;
+import org.rebelland.pipisa.config.QuestConfig;
+import org.rebelland.pipisa.model.QuestModel;
 import org.rebelland.rcore.RCore;
 import java.sql.*;
 import java.util.ArrayList;
@@ -37,15 +38,15 @@ public class QuestDB {
     }
 
     // Создать квест
-    public boolean createQuest(UUID uuid, SimpleQuests quest) {
+    public boolean createQuest(UUID uuid, QuestModel quest) {
         String sql = "INSERT IGNORE INTO quests (uuid, block, maxprogress, progress, isCompleted) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = RCore.getInstance().getDatabaseService().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, uuid.toString());
             ps.setString(2, quest.getBlock().name());
-            ps.setInt(3, quest.getMaxProgress());
+            ps.setInt(3, quest.getAmount());
             ps.setInt(4, quest.getProgress());
-            ps.setBoolean(5, quest.isCompleted());
+            ps.setBoolean(5, quest.getCompleted());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -54,12 +55,12 @@ public class QuestDB {
     }
 
     // Сохранить прогресс квеста (обновляет progress и isCompleted)
-    public boolean saveQuestProgress(UUID uuid, SimpleQuests quest) {
+    public boolean saveQuestProgress(UUID uuid, QuestModel quest) {
         String sql = "UPDATE quests SET progress = ?, isCompleted = ? WHERE uuid = ? AND block = ?";
         try (Connection conn = RCore.getInstance().getDatabaseService().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, quest.getProgress());
-            ps.setBoolean(2, quest.isCompleted());
+            ps.setBoolean(2, quest.getCompleted());
             ps.setString(3, uuid.toString());
             ps.setString(4, quest.getBlock().name());
             return ps.executeUpdate() > 0;
@@ -72,8 +73,8 @@ public class QuestDB {
     /**
      * Загружает все квесты игрока и возвращает список SimpleQuests
      */
-    public List<SimpleQuests> getPlayerQuests(UUID uuid) {
-        List<SimpleQuests> quests = new ArrayList<>();
+    public List<QuestModel> getPlayerQuests(UUID uuid) {
+        List<QuestModel> quests = new ArrayList<>();
         String sql = "SELECT block, progress, maxprogress, isCompleted FROM quests WHERE uuid = ?";
 
         try (Connection conn = RCore.getInstance().getDatabaseService().getConnection();
@@ -89,15 +90,26 @@ public class QuestDB {
                         int maxProgress = rs.getInt("maxprogress");
                         boolean isCompleted = rs.getBoolean("isCompleted");
 
-                        // Примечание: Title и Description нет в БД, ставим заглушки.
-                        // Идеально было бы брать их из конфига по типу блока.
-                        quests.add(new SimpleQuests(
+                        QuestModel template = QuestConfig.getInstance().findQuestTemplate(material, maxProgress);
+
+                        String name;
+                        String lore;
+
+                        if (template != null) {
+                            name = template.getName();
+                            lore = template.getLore();
+                        } else { //Заглушки
+                            name = "Quest for " + material.name();
+                            lore = "Collect " + maxProgress + " blocks";
+                        }
+
+                        quests.add(new QuestModel(
                                 material,
                                 maxProgress,
                                 progress,
-                                "Quest for " + material.name(), // Заглушка
-                                "Collect " + maxProgress + " blocks", // Заглушка
-                                isCompleted
+                                isCompleted,
+                                name,   // Из конфига или заглушка
+                                lore    // Из конфига или заглушка
                         ));
 
                     } catch (Exception e) {

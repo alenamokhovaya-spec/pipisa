@@ -3,6 +3,7 @@ package org.rebelland.pipisa.command;
 import org.bukkit.entity.Player;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.command.SimpleCommand;
+import org.rebelland.pipisa.config.QuestConfig;
 
 public class MyFirstCommand extends SimpleCommand {
     public MyFirstCommand() {
