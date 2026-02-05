@@ -6,7 +6,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.annotation.AutoRegister;
-import org.rebelland.pipisa.api.QuestService;
+import org.rebelland.pipisa.api.QuestCache;
 import org.rebelland.pipisa.database.TreasuryRepository;
 
 @AutoRegister
@@ -16,7 +16,7 @@ public final class PlayerJoinEventListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Common.runAsync(() ->{
             TreasuryRepository.getInstance().updatePlayer(event.getPlayer().getUniqueId(), event.getPlayer().getName());
-            QuestService.getInstance().loadPlayer(event.getPlayer().getUniqueId());
+            QuestCache.getInstance().loadPlayer(event.getPlayer().getUniqueId());
         });
     }
 }

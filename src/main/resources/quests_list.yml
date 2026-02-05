@@ -1,0 +1,21 @@
+quests:
+  quest1:
+    block: "OAK_LOG"
+    amount: 16
+    name: "&6&lНачо"
+    lore: "&eДобыть 16 дубовых бревён."
+  quest2:
+    block: "STONE"
+    amount: 32
+    name: "&6&lПервые шаги"
+    lore: "&eДобыть 32 камня."
+  quest3:
+    block: "IRON_ORE"
+    amount: 16
+    name: "&6&lписьки"
+    lore: "&eДобыть 16 железной руды."
+  quest4:
+    block: "GOLD_ORE"
+    amount: 22
+    name: "ccc"
+    lore: "iii"

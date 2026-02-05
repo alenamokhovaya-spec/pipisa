@@ -2,26 +2,23 @@ package org.rebelland.pipisa.listener;
 
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.mineacademy.fo.Common;
 import org.mineacademy.fo.annotation.AutoRegister;
 import org.mineacademy.fo.event.SimpleListener;
 import org.mineacademy.fo.remain.CompMaterial;
-import org.rebelland.pipisa.api.QuestService;
+import org.rebelland.pipisa.api.QuestCache;
 import org.rebelland.pipisa.database.QuestDB;
 
 import java.util.List;
 
-@AutoRegister
-public final class PlayerBreakEvent extends SimpleListener<BlockBreakEvent> {
+public final class PlayerBreakEvent implements Listener {
 
-    public PlayerBreakEvent() {
-        super(BlockBreakEvent.class, EventPriority.HIGHEST, true);
-    }
-
-    @Override
-    protected void execute(BlockBreakEvent event) {
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlock();
         CompMaterial blockMaterial = CompMaterial.fromBlock(block);
@@ -31,7 +28,7 @@ public final class PlayerBreakEvent extends SimpleListener<BlockBreakEvent> {
 
         // Получаем список блоков для квестов игрока
         Common.runAsync(() -> {
-            QuestService.getInstance().addProgress(event.getPlayer().getUniqueId(), blockMaterial, 1);
+            QuestCache.getInstance().addProgress(event.getPlayer().getUniqueId(), blockMaterial, 1);
         });
     }
 }

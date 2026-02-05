@@ -8,11 +8,11 @@ import org.rebelland.pipisa.command.Menushka;
 import org.rebelland.pipisa.command.MyFirstCommand;
 import org.rebelland.pipisa.command.QuestCommand;
 import org.rebelland.pipisa.command.TreasuryCommands;
+import org.rebelland.pipisa.config.QuestConfig;
 import org.rebelland.pipisa.database.QuestDB;
 import org.rebelland.pipisa.database.TreasuryRepository;
 import org.rebelland.pipisa.listener.PlayerBreakEvent;
 import org.rebelland.pipisa.listener.PlayerJoinEventListener;
-import org.rebelland.pipisa.listener.PlayerBreakEvent;
 
 public final class Pipisa extends SimplePlugin {
 
@@ -22,11 +22,11 @@ public final class Pipisa extends SimplePlugin {
         registerCommand(new MyFirstCommand());
         registerCommand(new Menushka());
         TreasuryRepository.getInstance().initializeTables();
-        registerEvents(new PlayerJoinEventListener());
         QuestDB.getInstance().initializeTablesQuest();
-        registerCommand(new QuestCommand());
+        registerEvents(new PlayerJoinEventListener());
         registerEvents(new PlayerBreakEvent());
-
+        registerCommand(new QuestCommand());
+        QuestConfig.getInstance();
     }
 
     @Override
